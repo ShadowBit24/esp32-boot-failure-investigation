@@ -1,53 +1,184 @@
-# Final Fault Domain Analysis
+# Final Root Cause Analysis (RCA) Summary
 
-Evidence ID: EV-11
-Related documents: all evidence files EV-01 to EV-10; ../POST_MORTEM.md; ../TEST_MATRIX.md
-Devices under test: ESP32 DevKit V1 (Boards 1, 2, 3 — single purchase batch)
+Document ID: RCA-001
+Package ID: EV-11 (see evidence/README.md)
+Investigation Type: Embedded Systems Failure Analysis
+Platform: ESP32-D0WD-V3 Development Boards (DevKit V1, Boards 1–3, single purchase batch)
+Status: Investigation Complete
+Root Cause: Not conclusively isolated
+Failure Domain: Narrowed and bounded through evidence-based elimination
 
-# Purpose
+*Editorial note (2026-10-23): This document supersedes the original EV-11 analysis file. Its evidence items were reconciled to the published evidence package: duplicate items merged, derived observations relabelled as analysis (D-series) rather than raw evidence, and all items mapped to their source files. Item references in this document (E-01 to E-26, D-01 to D-03) are the canonical item-level references for this investigation.*
 
-To consolidate the evidence package into a final fault localisation statement: which parts of the system are confirmed functional, which single behaviour is confirmed failing, what fault domain remains after all eliminations, and which questions remain open. This file is the analytical terminus of the investigation. It claims exactly what the preceding evidence supports, and it records, with equal care, what the evidence does not support.
+## Executive Summary
 
-# Command / Procedure
+Three ESP32 DevKit V1 development boards from the same manufacturing batch consistently failed to boot uploaded firmware.
 
-Analytical procedure (no new measurements are introduced in this file):
+Despite repeated application startup failures, all major subsystems involved in firmware deployment and storage were validated independently. The investigation systematically verified:
 
-1. List every capability exercised in the investigation and its verdict, with the evidence file that establishes it.
-2. List every fault hypothesis considered and the evidence that eliminates or retains it.
-3. State the minimal domain consistent with all retained observations, including the two that constrain it most tightly: the mode/frequency sensitivity of the failure (EV-09) and the batch-wide security configuration state (EV-03), corroborated behaviourally (EV-05).
-4. Record open questions and the experiments that would resolve them.
+- CPU operation
+- ROM bootloader operation
+- UART communication
+- USB communication
+- Firmware upload capability
+- Flash programming capability
+- Flash erase capability
+- Flash readback capability
+- Firmware image integrity
 
-# Expected Result
+Application execution remained unsuccessful across all three boards.
 
-A defensible analysis converges: the retained domain must explain (a) flawless host-driven operation of every subsystem, (b) failure of exactly one autonomous behaviour, (c) batch-wide replication, and (d) non-deterministic, configuration-sensitive failure data. Any proposed domain failing to explain all four is rejected.
+## Evidence Index
 
-# Observed Result
+Raw evidence items. Each item is a single recorded observation and cites the package file that preserves it.
 
-## Confirmed functional (by direct measurement)
+| ID | Description | Source |
+|---|---|---|
+| E-01 | Download mode entered; ROM responds `boot:0x3 (DOWNLOAD_BOOT)`, "waiting for download" | EV-01 serial_logs.md |
+| E-02 | CP210x USB-UART interface detected | EV-10 cross_board_comparison.md |
+| E-03 | ESP32 identified as ESP32-D0WD-V3 (revision v3.1) | EV-02 flash_id_results.md |
+| E-04 | Flash device detected (Manufacturer 68, Device 4016) | EV-02 flash_id_results.md |
+| E-05 | Flash size reported as 4 MB | EV-02 flash_id_results.md |
+| E-06 | Firmware upload completed successfully | EV-04 firmware_upload_results.md |
+| E-07 | Upload hash of data verified | EV-04 firmware_upload_results.md |
+| E-08 | Application image detected as valid ESP32 image | EV-07 image_validation.md |
+| E-09 | Image checksum valid | EV-07 image_validation.md |
+| E-10 | Image validation hash valid | EV-07 image_validation.md |
+| E-11 | DIO @ 80 MHz produced `invalid header: 0xd610e111` | EV-09 flash_mode_experiments.md |
+| E-12 | DIO @ 40 MHz produced `invalid header: 0x8e465484` | EV-09 flash_mode_experiments.md |
+| E-13 | DOUT @ 40 MHz produced `invalid header: 0x5691acba` | EV-09 flash_mode_experiments.md |
+| E-14 | FLASH_CRYPT_CNT = 1 | EV-03 espefuse_results.md |
+| E-15 | FLASH_CRYPT_CONFIG = 15 | EV-03 espefuse_results.md |
+| E-16 | RD_DIS = 1 | EV-03 espefuse_results.md |
+| E-17 | DISABLE_DL_DECRYPT = True | EV-03 espefuse_results.md |
+| E-18 | JTAG_DISABLE = True | EV-03 espefuse_results.md |
+| E-19 | Standard erase blocked by security protections | EV-05 flash_erase_validation.md |
+| E-20 | Forced erase completes successfully | EV-05 flash_erase_validation.md |
+| E-21 | Bootloader region reads `FF` after erase; erase verified in the expected address range | EV-06 erase_verification.md |
+| E-22 | Firmware read back from flash (327,680 bytes) | EV-08 flash_readback_validation.md |
+| E-23 | Read-back firmware validates successfully | EV-08 flash_readback_validation.md |
+| E-24 | Board 1 application startup failure | EV-10 cross_board_comparison.md |
+| E-25 | Board 2 application startup failure | EV-10 cross_board_comparison.md |
+| E-26 | Board 3 application startup failure | EV-10 cross_board_comparison.md |
 
-| Subsystem / capability | Evidence |
-|---|---|
-| ESP32 CPU and ROM bootloader execution | EV-01 (download mode operates; boot stages reached) |
-| CP210x USB interface | EV-10 (enumeration, all boards) |
-| UART communication | EV-01, EV-04 |
-| Download mode (BOOT/EN strapping) | EV-01, Procedure A |
-| Flash detection and identification | EV-02 |
-| Flash write | EV-04 |
-| Flash readback (host-driven) | EV-08 |
-| Flash erase (forced) and erase state | EV-05, EV-06 |
-| Firmware image validity | EV-07 |
+Derived observations. These are analysis products computed from the raw items above. They are listed separately so that no derived statement is counted as raw evidence.
 
-## Confirmed failing (by direct measurement)
+| ID | Description | Derived from |
+|---|---|---|
+| D-01 | Invalid-header values change with SPI configuration | E-11, E-12, E-13 |
+| D-02 | All boards fail application startup (batch pattern) | E-24, E-25, E-26 |
+| D-03 | All boards enter download mode and upload firmware successfully (batch pattern) | E-01, E-06, per EV-10 |
 
-| Behaviour | Evidence |
-|---|---|
-| Application startup (autonomous boot execution) | EV-01 Procedure B; EV-09; EV-10 |
+## Findings
 
-## Eliminated fault domains
+### FINDING-001 — ROM Bootloader Operational
 
-Dead MCU; USB failure; UART failure; download-mode failure; flash write failure; flash storage corruption; corrupt or mis-built firmware image; failed erase; single-unit defect.
+- **Evidence:** E-01, D-03
+- **Supporting observation:** `rst:0x10 (RTCWDT_RTC_RESET),boot:0x3 (DOWNLOAD_BOOT(UART0/UART1/SDIO_REI_REO_V2))` — "waiting for download"
+- **Interpretation:** The ESP32 ROM bootloader consistently enters download mode and remains accessible through UART.
+- **Conclusion:** ROM bootloader functionality verified.
+- **Status:** ELIMINATED AS FAILURE SOURCE
+- **Confidence:** High
 
-## Remaining fault domain
+### FINDING-002 — USB/UART Communication Operational
+
+- **Evidence:** E-02, D-03
+- **Supporting observation:** CP210x USB-UART bridge detected successfully.
+- **Interpretation:** Host communication path remains operational throughout testing.
+- **Conclusion:** USB communication not contributing to observed failure.
+- **Status:** ELIMINATED AS FAILURE SOURCE
+- **Confidence:** High
+
+### FINDING-003 — MCU Functional
+
+- **Evidence:** E-01, E-03
+- **Supporting observation:** ESP32-D0WD-V3 detected consistently.
+- **Interpretation:** CPU executes ROM bootloader code correctly.
+- **Conclusion:** Processor not identified as root cause.
+- **Status:** ELIMINATED AS FAILURE SOURCE
+- **Confidence:** High
+
+### FINDING-004 — SPI Flash Device Detected
+
+- **Evidence:** E-04, E-05
+- **Supporting observation:** Manufacturer: 68; Device: 4016; Detected flash size: 4 MB.
+- **Interpretation:** The flash device responds correctly to identification commands.
+- **Conclusion:** Complete flash-device failure not supported by evidence.
+- **Status:** ELIMINATED AS COMPLETE FLASH FAILURE
+- **Confidence:** High
+
+### FINDING-005 — Firmware Upload Successful
+
+- **Evidence:** E-06, E-07, D-03
+- **Supporting observation:** "Hash of data verified."
+- **Interpretation:** Firmware images are successfully transmitted and programmed into flash memory.
+- **Conclusion:** Firmware upload process functioning correctly.
+- **Status:** ELIMINATED AS FAILURE SOURCE
+- **Confidence:** High
+
+### FINDING-006 — Firmware Image Valid
+
+- **Evidence:** E-08, E-09, E-10
+- **Supporting observation:** Detected image type: ESP32; Checksum: valid; Validation hash: valid.
+- **Interpretation:** The generated application image passes structural integrity verification.
+- **Conclusion:** Firmware image corruption not supported.
+- **Status:** ELIMINATED AS FAILURE SOURCE
+- **Confidence:** High
+
+### FINDING-007 — Firmware Successfully Stored In Flash
+
+- **Evidence:** E-22, E-23
+- **Supporting observation:** Read-back image validates successfully.
+- **Interpretation:** Application image remains recoverable and valid after storage.
+- **Conclusion:** Flash storage integrity verified.
+- **Status:** ELIMINATED AS FAILURE SOURCE
+- **Confidence:** High
+
+### FINDING-008 — Security Configuration Present
+
+- **Evidence:** E-14, E-15, E-16, E-17, E-18, E-19
+- **Supporting observation:** FLASH_CRYPT_CNT = 1; FLASH_CRYPT_CONFIG = 15; RD_DIS = 1; DISABLE_DL_DECRYPT = True; JTAG_DISABLE = True; standard erase refused on security grounds (E-19), behaviourally corroborating the eFuse record.
+- **Interpretation:** Security-related eFuse configuration exists consistently across all devices, in a non-factory-virgin state.
+- **Conclusion:** Security configuration remains a viable contributing factor.
+- **Status:** CONTRIBUTING FACTOR POSSIBLE
+- **Confidence:** Medium
+
+### FINDING-009 — Boot Failure Sensitive To SPI Flash Configuration
+
+- **Evidence:** E-11, E-12, E-13, D-01
+- **Supporting observation:** DIO @ 80 MHz: `0xd610e111`; DIO @ 40 MHz: `0x8e465484`; DOUT @ 40 MHz: `0x5691acba`.
+- **Interpretation:** Changing flash communication configuration changes failure output, while the stored data is proven constant (FINDING-007). The corruption is introduced in the boot-time transfer.
+- **Conclusion:** SPI flash communication path strongly implicated.
+- **Status:** HIGHLY RELEVANT
+- **Confidence:** High
+
+### FINDING-010 — Failure Reproduced Across Three Independent Boards
+
+- **Evidence:** E-24, E-25, E-26, D-02
+- **Supporting observation:** Three boards tested. Three boards fail application startup.
+- **Interpretation:** Failure not isolated to a single hardware unit.
+- **Conclusion:** Underlying cause likely common to batch, configuration, or component selection.
+- **Status:** HIGHLY RELEVANT
+- **Confidence:** High
+
+## Eliminated Failure Hypotheses
+
+| Hypothesis | Status | Supporting Evidence |
+|---|---|---|
+| Dead ESP32 MCU | Eliminated | E-01, E-03 |
+| Broken USB Interface | Eliminated | E-02 |
+| Broken UART Interface | Eliminated | E-01 |
+| Download Mode Failure | Eliminated | E-01, D-03 |
+| Upload Process Failure | Eliminated | E-06, E-07 |
+| Corrupt Firmware Image | Eliminated | E-08, E-09, E-10 |
+| Flash Programming Failure | Eliminated | E-06, E-07 |
+| Flash Read Failure | Eliminated | E-22, E-23 |
+| Erase Failure | Eliminated | E-20, E-21 |
+| Single Board Defect | Eliminated | E-24, E-25, E-26 |
+
+## Remaining Fault Domain
+
+Validated functional: ROM Bootloader, USB Interface, UART Interface, Firmware Image, Flash Programming, Flash Readback. The failure sits in the one transition none of those cover:
 
 ```text
 ROM Bootloader
@@ -59,32 +190,57 @@ Flash Security / Configuration
 Application Startup
 ```
 
-# Interpretation
+Supporting evidence: D-01, E-14, E-15, E-16, D-02.
 
-The system's behaviour partitions cleanly. Every operation the host can drive succeeds; the one operation the device performs autonomously, reading its boot image under boot parameters, fails. The fault therefore resides not in any component's basic function, all of which are demonstrated, but in the boot-phase interaction among the three middle elements of the domain chain: the ROM's read of the flash over the SPI interface, under the device's security and configuration state.
+Confidence: High (for the domain as bounded; see the certainty distinction in the Closure Statement).
 
-Two retained facts constrain mechanism hypotheses:
+## Probable Root Cause Categories
 
-1. **Configuration sensitivity without remediation (EV-09).** The invalid-header value varies deterministically with SPI mode and frequency, while no tested configuration boots. The transfer at boot is therefore implicated directly, and simple explanations in terms of a single marginal setting are excluded across the tested range.
-2. **Non-virgin security state, batch-wide (EV-03, EV-05).** Flash encryption counter active, configuration populated, read-disable asserted, download decryption disabled: a provisioned posture, identical across the batch, whose interaction with boot-time image handling (including any expectation of encrypted versus plaintext image handling at boot) is a retained candidate mechanism that host-side tests cannot exonerate, precisely because host-side operations are performed by the downloader under its own rules.
+### RCA-CAT-001 — SPI Flash Communication Compatibility
 
-The open branch concerning test-setup artefact is assessed as low: the identical setup passes these boards on six host-driven capabilities, and the failure pattern is too specific (one capability, configuration-sensitive data) to attribute to the rig. It is retained formally only because no known-good control unit from a different batch was available to close it by direct comparison.
+- **Evidence:** E-11, E-12, E-13, D-01
+- **Rationale:** Failure signatures change when SPI communication parameters change.
+- **Assessment:** Most strongly supported remaining hypothesis.
+- **Confidence:** High that the SPI communication path is implicated in the failure; Medium that it is the sole root cause. The configuration sensitivity is established by direct observation; the mechanism inside the path (timing, signal integrity, device behaviour at boot parameters) is not isolated by the current evidence, and is not claimed.
 
-## Open questions
+### RCA-CAT-002 — Flash Security Configuration Interaction
 
-- What is the functional consequence of FLASH_CRYPT_CNT = 1 (with FLASH_CRYPT_CONFIG = 15) for the ROM's boot-time image handling on these specific devices, given that host-side read/write operations are unaffected?
-- What are the transfer characteristics of the manufacturer `0x68` (BoyaMicro BY25Q32BS) flash under ESP32 boot-mode read patterns, as distinct from downloader read patterns? Bus capture during a failed boot is the discriminating measurement.
-- Is the SPI timing/compatibility behaviour at boot within the flash device's correct operating envelope, and does it degrade across the mode/frequency space in the manner the header signatures suggest?
-- How does the observed security configuration interact with boot: does any part of the boot path apply decryption or access rules that the downloader path does not, and would that account for valid stored data being rejected at validation?
+- **Evidence:** E-14, E-15, E-16, E-17, E-19
+- **Rationale:** Security-related eFuse settings consistently present on all boards, corroborated behaviourally by the erase interlock.
+- **Assessment:** Potential contributor requiring further investigation.
+- **Confidence:** Medium
 
-Each open question is paired, in the repository README (Future Work), with the experiment that resolves it: a known-good control board through the identical matrix; a logic-analyser capture of the SPI bus during failed boot; flash device substitution on one unit; and a field-by-field eFuse comparison against a virgin device.
+### RCA-CAT-003 — Batch-Specific Hardware or Component Behaviour
 
-# Conclusion
+- **Evidence:** E-24, E-25, E-26, D-02
+- **Rationale:** Three independent boards exhibit nearly identical behavior.
+- **Assessment:** Manufacturing-batch-specific issue remains possible.
+- **Confidence:** Medium
 
-The fault is isolated to the domain bounded by the ROM bootloader, the SPI flash interface, the flash security/configuration state, and application startup. Seven alternative domains are eliminated by direct measurement, and the elimination is replicated across three boards. Within the retained domain, no single component or mechanism is identified as root cause by the current evidence, and none is claimed. The batch is non-viable for firmware execution; the investigation's product is this localisation, the evidence chain supporting it, and the defined experiments that would extend it.
+## Open Questions
 
-# Confidence Level
+Carried from the investigation record; each is paired with its resolving experiment in the repository README (Future Work).
 
-- Fault domain isolation: **High.** Convergent evidence from ten preceding records, three-unit replication, and a complete elimination account.
-- Batch-level applicability: **High.** Per EV-10.
-- Single-component root cause attribution: **Not established.** Deliberately not claimed. Attribution requires bus-level measurement and a control unit, which are recorded as future work.
+- What is the functional consequence of FLASH_CRYPT_CNT = 1 (with FLASH_CRYPT_CONFIG = 15) for ROM boot-time image handling on these devices?
+- What are the transfer characteristics of the manufacturer 68 (BoyaMicro BY25Q32BS) flash under ESP32 boot-mode read patterns, as distinct from downloader read patterns? (Resolving measurement: SPI bus capture during a failed boot.)
+- Is the SPI timing/compatibility behaviour at boot within the flash device's correct operating envelope across the tested mode/frequency space?
+- How does the observed security configuration interact with the boot path, given that host-driven operations are unaffected?
+
+## Final Engineering Assessment
+
+Validated functional: ESP32 MCU; ROM Bootloader; CP210x Interface; UART Communication; Download Mode; Flash Detection; Flash Programming; Flash Erase; Flash Readback; Firmware Validation.
+
+Validated failing: Application Startup.
+
+Final conclusion: Based on all collected evidence, the most defensible engineering conclusion is that user firmware fails during the transition between ROM bootloader execution and application startup. CPU failure, USB failure, UART failure, flash programming failure, flash read failure, firmware corruption, and download-mode failure were eliminated through direct testing. The remaining fault domain is constrained to the interaction between the ROM bootloader, the SPI flash subsystem, the flash security configuration, and the application startup sequence.
+
+## RCA Closure Statement
+
+- **Investigation Status:** Closed, with disposition. The batch is rejected as non-viable for firmware execution, and the failure is localised to the domain stated above. Closure applies to the localisation and the batch disposition; the mechanism-level open questions listed in this document remain open and are tracked as future work in the repository README. "Closed" in this statement must not be read as "root cause identified".
+- **Evidence Confidence:** High
+- **Root Cause Certainty:** Medium
+- **Failure Domain Certainty:** High
+- **Total Evidence Collected:** 26 raw evidence items (E-01 to E-26), plus 3 derived observations (D-01 to D-03) recorded separately as analysis
+- **Major Findings:** 10
+- **Eliminated Failure Hypotheses:** 10
+- **Remaining Root Cause Categories:** 3

@@ -16,7 +16,11 @@ Raw and structured evidence for the ESP32 multi-board boot failure investigation
 | EV-08 | [flash_readback_validation.md](flash_readback_validation.md) | Stored image read back from flash (327,680 bytes) and re-validated | T13 |
 | EV-09 | [flash_mode_experiments.md](flash_mode_experiments.md) | Failure signature varies with SPI mode/frequency; no configuration remediates | T14–T16 |
 | EV-10 | [cross_board_comparison.md](cross_board_comparison.md) | Identical pass/fail pattern on all 3 boards; batch-level property | T17 |
-| EV-11 | [final_fault_domain_analysis.md](final_fault_domain_analysis.md) | Eliminations, retained fault domain, open questions, confidence statement | All |
+| EV-11 | [final_fault_domain_analysis.md](final_fault_domain_analysis.md) | RCA-001: findings, eliminations, retained fault domain, root-cause categories, closure statement | All |
+
+## Item-level traceability
+
+The final analysis (RCA-001, in final_fault_domain_analysis.md) cites evidence at item level: E-01 to E-26 are single recorded observations, each mapped in that document's Evidence Index to the package file above that preserves it. D-01 to D-03 are derived observations (analysis computed from the raw items) and are listed separately there so that no derived statement is counted as raw evidence. All other documents in this repository cite evidence at file level (EV-01 to EV-11).
 
 ## Photographic record
 

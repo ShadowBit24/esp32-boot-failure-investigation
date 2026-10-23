@@ -121,7 +121,7 @@ The troubleshooting flow, generalised for reuse on any "flashes fine, won't boot
 
 # Evidence
 
-Key observations, as recorded (full log in [INVESTIGATION_LOG.md](INVESTIGATION_LOG.md)):
+The full evidence package, eleven structured evidence files (EV-01 to EV-11) plus the photographic record, is published in [evidence/](evidence/README.md). Each file follows a fixed format (Purpose, Command / Procedure, Expected Result, Observed Result, Interpretation, Conclusion, Confidence Level) and preserves the recorded data verbatim. Key observations, as recorded (full log in [INVESTIGATION_LOG.md](INVESTIGATION_LOG.md)):
 
 **Boot failure (all boards):** ROM reports `invalid header` with non-repeating values: `0x3ffea272`, `0xd610e111`, `0x8e465484`, `0x5691acba`.
 
@@ -218,7 +218,7 @@ Full version: [LESSONS_LEARNED.md](LESSONS_LEARNED.md). In brief:
 2. **Bus capture:** logic-analyzer capture of SPI CLK/CS/DATA during failed boot vs download-mode read, to test the marginal-interface hypothesis directly.
 3. **Flash substitution:** on one board, replace the flash device (or boot from a known-good external image source) to separate flash-device behaviour from SoC/eFuse state.
 4. **eFuse deep-dive:** full espefuse dump comparison against a virgin board, field by field.
-5. **Publish raw evidence:** per-board serial logs and esptool/espefuse outputs under `evidence/` in this repository.
+5. **Extend the evidence package:** the structured evidence records and board photographs are published under [evidence/](evidence/README.md). Original timestamped terminal capture files will be added alongside them as bench work continues.
 
 ---
 
@@ -232,6 +232,7 @@ Full version: [LESSONS_LEARNED.md](LESSONS_LEARNED.md). In brief:
 | TEST_MATRIX.md | Complete test matrix with procedures, expected vs observed, per-board results |
 | LESSONS_LEARNED.md | Transferable lessons for board bring-up and validation work |
 | RESUME_EXTRACT.md | Resume bullets, skills, and interview talking points drawn from this study |
+| evidence/ | The evidence package: 11 structured evidence files (EV-01 to EV-11) with an index, plus board photographs |
 | assets/architecture.md | Boot chain and diagnostic setup, with diagrams |
 | assets/failure_tree.md | Fault tree with eliminated and open branches |
 | assets/troubleshooting_flowchart.md | Reusable diagnostic flow for "flashes fine, won't boot" failures |

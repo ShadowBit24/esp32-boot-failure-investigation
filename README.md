@@ -243,3 +243,5 @@ Full version: [LESSONS_LEARNED.md](LESSONS_LEARNED.md). In brief:
 ## Related work
 
 This case study extends an earlier single-board investigation and diagnostic harness: [esp32_hardware_test](https://github.com/ShadowBit24/esp32_hardware_test). The relationship between the two, including where this study's data narrows the earlier conclusion, is documented in POST_MORTEM.md §7.
+
+The follow-up recovery experiment recorded in ADDENDUM.md was run with the automated validation framework in [esp32-automated-test](https://github.com/ShadowBit24/esp32-automated-test).

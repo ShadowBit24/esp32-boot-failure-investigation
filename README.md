@@ -222,12 +222,15 @@ Full version: [LESSONS_LEARNED.md](LESSONS_LEARNED.md). In brief:
 
 ---
 
+**Follow-up (2026-11-01):** a recovery experiment on a unit presenting the same symptom set tested RCA-CAT-002 directly; see [ADDENDUM.md](ADDENDUM.md).
+
 ## Repository contents
 
 | File | Contents |
 |---|---|
 | README.md | This document |
 | POST_MORTEM.md | Formal post-mortem: impact, analysis, fault domain, corrective next steps |
+| ADDENDUM.md | Follow-up record (2026-11-01): recovery experiment testing root cause category RCA-CAT-002 |
 | INVESTIGATION_LOG.md | Step-by-step investigation record with commands and observations |
 | TEST_MATRIX.md | Complete test matrix with procedures, expected vs observed, per-board results |
 | LESSONS_LEARNED.md | Transferable lessons for board bring-up and validation work |

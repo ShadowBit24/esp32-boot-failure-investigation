@@ -4,6 +4,10 @@ A controlled fault-isolation investigation into a batch-level ESP32 boot failure
 
 This repository is an engineering case study. The deliverable is the investigation itself: the test matrix, the evidence, the eliminated fault domains, and the fault domain that remains.
 
+## The debugging pack
+
+This investigation is written up as a field guide: the ESP32 Bring-Up and Boot Failure Debugging Pack, the seven-step method used here, the full worked case study, plus bring-up checklists and fault investigation templates. It is available here: https://nahiyan8.gumroad.com/l/esp32-boot-failure-debugging-pack
+
 ---
 
 # Overview
